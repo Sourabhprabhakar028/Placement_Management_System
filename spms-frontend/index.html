@@ -1,0 +1,2204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>PMS (Placement Management System)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+    
+    /* HIDE SCROLLBARS GLOBALLY */
+    * {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    *::-webkit-scrollbar {
+      display: none;
+    }
+    
+    :root {
+      --bg-base: #030712;
+      --bg-1: #0B1120;
+      --bg-2: #0F172A;
+      --bg-3: #1E293B;
+      --line: rgba(255, 255, 255, 0.08);
+      --line2: rgba(255, 255, 255, 0.15);
+      --blue: #3B82F6;
+      --blue-h: #60A5FA;
+      --green: #10B981;
+      --amber: #F59E0B;
+      --rose: #F43F5E;
+      --violet: #8B5CF6;
+      --teal: #06B6D4;
+      --indigo: #6366F1;
+      --t1: #F8FAFC;
+      --t2: #94A3B8;
+      --t3: #64748B;
+      --f: 'Inter', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+      --r: 10px;
+      --r2: 16px;
+    }
+
+    body { font-family: var(--f); background: var(--bg-base); color: var(--t1); font-size: 13px; min-height: 100vh; overflow-x: hidden; }
+
+    /* NAVIGATION BAR */
+    .nav-bar { 
+      display: flex; 
+      background: var(--bg-1); 
+      border-bottom: 1px solid var(--line); 
+      padding: 0 16px; 
+      gap: 4px; 
+      overflow-x: auto; 
+      white-space: nowrap; 
+      -webkit-overflow-scrolling: touch;
+    }
+    .ntab { padding: 12px 16px; font-size: 11px; font-weight: 600; color: var(--t3); cursor: pointer; border-bottom: 2px solid transparent; text-transform: uppercase; letter-spacing: .05em; background: none; border-top: none; border-left: none; border-right: none; transition: color 0.2s; }
+    .ntab:hover { color: var(--t2); }
+    .ntab.on { color: var(--blue-h); border-color: var(--blue); }
+
+    /* LAYOUT SCREENS */
+    .scr { display: none; width: 100%; }
+    .scr.on { display: block; }
+    .shell { display: flex; min-height: calc(100vh - 46px); width: 100%; flex-direction: row; }
+
+    /* SIDEBAR */
+    .sb { width: 230px; background: var(--bg-1); border-right: 1px solid var(--line); display: flex; flex-direction: column; flex-shrink: 0; }
+    .sb-top { padding: 16px 14px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; }
+    .logo-box { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg, var(--blue), var(--violet)); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
+    .sb-body { flex: 1; padding: 10px 8px; overflow-y: auto; }
+    .sb-sect { font-size: 9px; font-weight: 700; color: var(--t3); text-transform: uppercase; padding: 10px 8px 4px; letter-spacing: .08em; }
+    .si { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: var(--r); font-size: 12px; color: var(--t2); cursor: pointer; margin: 2px 0; transition: all .15s; }
+    .si:hover { background: var(--bg-2); color: var(--t1); }
+    .si.on { background: rgba(59,130,246,.15); color: var(--blue-h); font-weight: 600; border-left: 3px solid var(--blue); }
+    
+    .sb-foot { border-top: 1px solid var(--line); padding: 12px 10px; }
+    .user-card { display: flex; align-items: center; gap: 8px; padding: 9px; background: var(--bg-2); border-radius: var(--r); border: 1px solid var(--line2); }
+    .u-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; flex-shrink: 0; overflow: hidden; object-fit: cover; }
+    .u-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .u-role-badge { font-size: 8px; font-weight: 700; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; font-family: var(--mono); letter-spacing: .05em; }
+    .role-admin { background: rgba(139,92,246,.25); color: var(--violet); }
+    .role-student { background: rgba(59,130,246,.25); color: var(--blue-h); }
+
+    /* MAIN PANEL */
+    .main-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; width: 100%; background: var(--bg-base); }
+    .topbar { min-height: 54px; padding: 8px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); background: var(--bg-1); flex-wrap: wrap; gap: 8px; }
+    .pg-title { font-size: 15px; font-weight: 700; color: var(--t1); letter-spacing: -.01em; }
+    .content { flex: 1; padding: 20px 24px; overflow-y: auto; }
+
+    /* STATS GRID */
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+    .sc { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--r2); padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+    .sc-lbl { font-size: 10px; font-weight: 700; color: var(--t3); text-transform: uppercase; letter-spacing: .05em; }
+    .sc-num { font-size: 26px; font-weight: 700; font-family: var(--mono); margin-top: 6px; }
+
+    /* CHARTS & ANALYTICS */
+    .chart-row { display: grid; grid-template-columns: 1.6fr 1fr; gap: 14px; margin-bottom: 24px; }
+    .chart-card { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--r2); padding: 22px; min-width: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+    
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .chart-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--t1);
+      letter-spacing: -.01em;
+    }
+    .chart-badge {
+      font-size: 10px;
+      font-family: var(--mono);
+      background: rgba(59,130,246,0.12);
+      color: var(--blue-h);
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(59,130,246,0.25);
+    }
+
+    .bc { 
+      display: flex; 
+      align-items: flex-end; 
+      gap: 14px; 
+      height: 160px; 
+      padding-bottom: 24px; 
+      position: relative; 
+      margin-top: 10px; 
+      overflow-x: auto; 
+      background-image: linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 100% 40px;
+    }
+    .bc::after { 
+      content: ''; 
+      position: absolute; 
+      bottom: 24px; 
+      left: 0; 
+      right: 0; 
+      height: 2px; 
+      background: var(--line2); 
+    }
+    .bc-col { 
+      flex: 1; 
+      min-width: 42px; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      gap: 8px; 
+      height: 100%; 
+      justify-content: flex-end; 
+      transition: transform 0.2s ease;
+      cursor: default;
+    }
+    .bc-col:hover {
+      transform: translateY(-3px);
+    }
+    .bc-val {
+      font-size: 10px;
+      font-family: var(--mono);
+      font-weight: 700;
+      color: var(--t1);
+      background: rgba(15, 23, 42, 0.85);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .bc-bar { 
+      width: 100%; 
+      max-width: 32px;
+      border-radius: 8px 8px 0 0; 
+      transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1), filter 0.2s; 
+    }
+    .bc-col:hover .bc-bar {
+      filter: brightness(1.2);
+    }
+    .bc-lbl { 
+      font-size: 10px; 
+      font-weight: 600;
+      color: var(--t2); 
+      font-family: var(--mono); 
+      white-space: nowrap; 
+    }
+
+    /* TABLES & WRAPPERS */
+    .tbl-wrap { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--r2); overflow: hidden; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+    .tbl-hd { padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); background: var(--bg-2); flex-wrap: wrap; gap: 8px; }
+    .table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; min-width: 650px; border-collapse: collapse; text-align: left; }
+    th { padding: 12px 16px; font-size: 10px; font-weight: 700; color: var(--t3); text-transform: uppercase; border-bottom: 1px solid var(--line); white-space: nowrap; letter-spacing: .05em; }
+    td { padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--t2); vertical-align: middle; white-space: nowrap; }
+    tr:last-child td { border: none; }
+    
+    /* BUTTONS & CONTROLS */
+    .btn { padding: 8px 14px; background: var(--blue); border: none; border-radius: var(--r); color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; box-shadow: 0 2px 10px rgba(59,130,246,0.3); }
+    .btn:hover { background: var(--blue-h); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(59,130,246,0.4); }
+    .btn-sec { background: var(--bg-3); border: 1px solid var(--line2); color: var(--t1); box-shadow: none; }
+    .btn-sec:hover { background: #334155; border-color: var(--t3); transform: translateY(-1px); }
+    .btn-danger { background: rgba(244,63,94,.15); border: 1px solid rgba(244,63,94,.3); color: var(--rose); box-shadow: none; }
+    .btn-danger:hover { background: var(--rose); color: #fff; transform: translateY(-1px); }
+
+    /* Processing button active state */
+    .btn.is-processing {
+      background: var(--amber) !important;
+      color: #030712 !important;
+      font-weight: 700 !important;
+      border-color: transparent !important;
+      cursor: wait !important;
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.45);
+      pointer-events: none;
+    }
+
+    /* Temporary black flash on click */
+    .btn.is-clicked {
+      background: #000000 !important;
+      color: #FFFFFF !important;
+      border: 1px solid rgba(255, 255, 255, 0.3) !important;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.8) !important;
+    }
+
+    .inp { width: 100%; padding: 9px 14px; background: var(--bg-2); border: 1px solid var(--line2); border-radius: var(--r); color: var(--t1); font-size: 12px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+    .inp:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
+
+    /* AUTHENTICATION SCREEN */
+    #login.scr {
+      background: radial-gradient(circle at 50% 20%, rgba(59, 130, 246, 0.12), transparent 60%), var(--bg-base);
+      min-height: calc(100vh - 46px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    #login.scr.on {
+      display: flex;
+    }
+    .auth-wrapper {
+      width: 100%;
+      max-width: 420px;
+      animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .login-box { 
+      width: 100%; 
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.85) 0%, rgba(11, 17, 32, 0.95) 100%);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12); 
+      border-radius: var(--r2); 
+      padding: 32px; 
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+    .auth-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .auth-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 18px;
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(59,130,246,0.4);
+    }
+    .auth-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--t1);
+      letter-spacing: -.02em;
+    }
+    .auth-subtitle {
+      font-size: 12px;
+      color: var(--t3);
+      margin-top: 2px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* CHIPS */
+    .chip { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 9px; font-weight: 600; font-family: var(--mono); text-transform: uppercase; cursor: pointer; letter-spacing: .05em; transition: filter 0.2s; }
+    .chip:hover { filter: brightness(1.2); }
+    .c-green { background: rgba(16,185,129,.15); color: var(--green); border: 1px solid rgba(16,185,129,.3); }
+    .c-blue { background: rgba(59,130,246,.15); color: var(--blue-h); border: 1px solid rgba(59,130,246,.3); }
+    .c-amber { background: rgba(245,158,11,.15); color: var(--amber); border: 1px solid rgba(245,158,11,.3); }
+    .c-rose { background: rgba(244,63,94,.15); color: var(--rose); border: 1px solid rgba(244,63,94,.3); }
+    .c-violet { background: rgba(139,92,246,.15); color: var(--violet); border: 1px solid rgba(139,92,246,.3); }
+
+    /* MODAL POPUPS */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(3,7,18,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); padding: 16px; }
+    .modal { background: var(--bg-1); border: 1px solid var(--line2); border-radius: var(--r2); padding: 24px; width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 48px rgba(0,0,0,0.8); }
+    .modal-h { font-size: 14px; font-weight: 700; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; color: var(--t1); }
+    .field-group { margin-bottom: 14px; }
+    .field-group label { display: block; font-size: 10px; font-weight: 700; color: var(--t3); text-transform: uppercase; margin-bottom: 5px; letter-spacing: .05em; }
+
+    #toast { position: fixed; bottom: 20px; right: 20px; padding: 12px 18px; border-radius: var(--r); font-size: 12px; font-weight: 600; color: #fff; z-index: 9999; opacity: 0; transition: opacity .25s; pointer-events: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: calc(100vw - 32px); }
+
+    /* RESPONSIVE BREAKPOINTS */
+    @media (max-width: 900px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .chart-row { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 680px) {
+      .shell { flex-direction: column; }
+      .sb { width: 100%; border-right: none; border-bottom: 1px solid var(--line); }
+      .sb-body { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; }
+      .sb-sect { width: 100%; padding: 4px 8px; }
+      .si { flex: 1 1 auto; justify-content: center; padding: 8px 10px; font-size: 11px; }
+      .stats { grid-template-columns: 1fr; }
+      .content { padding: 16px; }
+      .topbar { padding: 8px 16px; }
+      .login-box { padding: 24px; margin: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP NAVIGATION TABS -->
+  <div class="nav-bar">
+    <button class="ntab on" id="tab-login" onclick="spmsNav('login', this)">Auth</button>
+    <button class="ntab" id="tab-dash" style="display:none;" onclick="spmsNav('dash', this)">Dashboard</button>
+    <button class="ntab" id="tab-profile" style="display:none;" onclick="spmsNav('profile', this)">My Profile</button>
+    <button class="ntab" id="tab-students" style="display:none;" onclick="spmsNav('students', this)">Students</button>
+    <button class="ntab" id="tab-companies" style="display:none;" onclick="spmsNav('companies', this)">Companies</button>
+    <button class="ntab" id="tab-applications" style="display:none;" onclick="spmsNav('applications', this)">Applications</button>
+    <button class="ntab" id="tab-placements" style="display:none;" onclick="spmsNav('placements', this)">Placements</button>
+  </div>
+
+  <div id="toast">Notification</div>
+
+  <!-- DYNAMIC ACTION MODAL -->
+  <div class="modal-overlay" id="actionModal">
+    <div class="modal">
+      <div class="modal-h"><span id="modalTitle">Action</span><span style="cursor:pointer; color:var(--t3); font-size:16px;" onclick="closeModal()">✕</span></div>
+      <form id="modalForm" onsubmit="handleModalSubmit(event)">
+        <div id="modalFields"></div>
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
+          <button type="button" class="btn btn-sec" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn" id="modalSubmitBtn">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 1. AUTHENTICATION SCREEN -->
+  <div id="login" class="scr on">
+    <div class="auth-wrapper">
+      <div class="login-box">
+        <div class="auth-brand">
+          <div class="auth-logo">P</div>
+          <div>
+            <div class="auth-title" id="authHeaderTitle">PMS Portal</div>
+            <div class="auth-subtitle">Placement Management System</div>
+          </div>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <form id="loginForm" method="post" autocomplete="off" onsubmit="handleLoginSubmit(event)">
+          <div class="field-group">
+            <label for="loginEmail">Email Address</label>
+            <input 
+              class="inp" 
+              type="email" 
+              id="loginEmail" 
+              name="username" 
+              autocomplete="off" 
+              required>
+          </div>
+          <div class="field-group">
+            <label for="loginPassword">Password</label>
+            <input 
+              class="inp" 
+              type="password" 
+              id="loginPassword" 
+              name="password" 
+              autocomplete="new-password" 
+              required>
+          </div>
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 14px;">
+            <a href="javascript:void(0)" onclick="openForgotPasswordModal()" style="font-size: 11px; color: var(--blue-h); text-decoration: none; font-weight: 600;">Forgot Password?</a>
+          </div>
+          <button type="submit" class="btn" style="width:100%; margin-top:4px; padding:10px;" id="loginSubmitBtn">Sign In to Portal</button>
+        </form>
+
+        <!-- REGISTER FORM -->
+        <form id="registerForm" method="post" autocomplete="off" onsubmit="handleRegisterSubmit(event)" style="display:none;">
+          <div class="field-group">
+            <label for="regName">Full Name</label>
+            <input 
+              class="inp" 
+              type="text" 
+              id="regName" 
+              name="name" 
+              autocomplete="off" 
+              required>
+          </div>
+          <div class="field-group">
+            <label for="regEmail">Email Address</label>
+            <input 
+              class="inp" 
+              type="email" 
+              id="regEmail" 
+              name="username" 
+              autocomplete="off" 
+              required>
+          </div>
+          <div class="field-group">
+            <label for="regPassword">Password</label>
+            <input 
+              class="inp" 
+              type="password" 
+              id="regPassword" 
+              name="new-password" 
+              autocomplete="new-password" 
+              required>
+          </div>
+          <div class="field-group">
+            <label for="regRole">Role</label>
+            <select class="inp" id="regRole" name="role">
+              <option value="STUDENT">STUDENT</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+          </div>
+          <button type="submit" class="btn" style="width:100%; margin-top:8px; padding:10px;" id="regSubmitBtn">Create Account</button>
+        </form>
+        
+        <div style="text-align:center; margin-top:20px; font-size:12px; color:var(--t3);">
+          <span id="authToggleText">Need an account?</span> 
+          <a href="javascript:void(0)" onclick="toggleAuthMode()" style="color:var(--blue-h); text-decoration:none; font-weight:600;" id="authToggleLink">Register</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. DASHBOARD SCREEN -->
+  <div id="dash" class="scr">
+    <div class="shell">
+      <div class="sb">
+        <div class="sb-top"><div class="logo-box">P</div><strong>PMS Portal</strong></div>
+        <div class="sb-body">
+          <div class="sb-sect">Overview</div>
+          <div class="si on" onclick="spmsNav('dash', this)">Dashboard</div>
+          <div class="si" onclick="spmsNav('profile', this)">My Profile & Status</div>
+          <div class="sb-sect">Security</div>
+          <div class="si" onclick="openChangePasswordModal(this)">🔒 Change Password</div>
+          <div class="sb-sect">Reports & Export</div>
+          <div class="si" onclick="downloadAuthorizedFile('/export/students/excel', 'students.xlsx', this)">Export Students</div>
+          <div class="si" onclick="downloadAuthorizedFile('/export/companies/excel', 'companies.xlsx', this)">Export Companies</div>
+          <div class="si" onclick="downloadAuthorizedFile('/export/placements/excel', 'placements.xlsx', this)">Export Placements</div>
+          <div class="si" onclick="downloadAuthorizedFile('/export/report/pdf', 'placement-report.pdf', this)">Export PDF Report</div>
+        </div>
+        <div class="sb-foot">
+          <div class="user-card">
+            <div class="u-avatar" id="uAvatar">U</div>
+            <div style="min-width:0; flex:1;">
+              <div style="font-weight:600; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="uName">User</div>
+              <span class="u-role-badge role-student" id="uRoleBadge">STUDENT</span>
+            </div>
+            <button class="btn btn-sec" style="padding:3px 6px; font-size:9px;" onclick="handleLogout(this)">Exit</button>
+          </div>
+        </div>
+      </div>
+      <div class="main-panel">
+        <div class="topbar">
+          <div class="pg-title">Dashboard Overview</div>
+          <button class="btn btn-sec" onclick="loadDashboard(this)">Refresh</button>
+        </div>
+        <div class="content">
+          <div class="stats">
+            <div class="sc"><div class="sc-lbl">Students</div><div class="sc-num" id="statStudents" style="color:var(--blue-h)">-</div></div>
+            <div class="sc"><div class="sc-lbl">Companies</div><div class="sc-num" id="statCompanies" style="color:var(--green)">-</div></div>
+            <div class="sc"><div class="sc-lbl">Applications</div><div class="sc-num" id="statApps" style="color:var(--amber)">-</div></div>
+            <div class="sc"><div class="sc-lbl">Placements</div><div class="sc-num" id="statPlacements" style="color:var(--violet)">-</div></div>
+          </div>
+
+          <div class="chart-row">
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">Branch-wise Placement Breakdown</div>
+                <div class="chart-badge">Live Analytics</div>
+              </div>
+              <div class="bc" id="branchChart">
+                <div style="color:var(--t3); font-size:11px; margin:auto;">Loading chart data...</div>
+              </div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">Quick Actions</div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:10px; margin-top:16px;">
+                <button class="btn admin-only" onclick="openCreateStudentModal(this)">+ Register New Student</button>
+                <button class="btn admin-only" onclick="openCreateCompanyModal(this)">+ Add New Company</button>
+                <button class="btn btn-sec" onclick="spmsNav('profile', document.getElementById('tab-profile'))">👤 Go to My Profile</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. STUDENT & PROFESSIONAL ADMIN PROFILE SCREEN -->
+  <div id="profile" class="scr">
+    <div class="shell">
+      <div class="sb">
+        <div class="sb-top"><div class="logo-box">P</div><strong>PMS Portal</strong></div>
+        <div class="sb-body">
+          <div class="sb-sect">Overview</div>
+          <div class="si" onclick="spmsNav('dash', this)">Dashboard</div>
+          <div class="si on" onclick="spmsNav('profile', this)">My Profile & Status</div>
+          <div class="sb-sect">Security</div>
+          <div class="si" onclick="openChangePasswordModal(this)">🔒 Change Password</div>
+        </div>
+        <div class="sb-foot">
+          <div class="user-card">
+            <div class="u-avatar" id="uAvatarProf">U</div>
+            <div style="min-width:0; flex:1;">
+              <div style="font-weight:600; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="uNameProf">User</div>
+              <span class="u-role-badge role-student" id="uRoleBadgeProf">STUDENT</span>
+            </div>
+            <button class="btn btn-sec" style="padding:3px 6px; font-size:9px;" onclick="handleLogout(this)">Exit</button>
+          </div>
+        </div>
+      </div>
+      <div class="main-panel">
+        <div class="topbar">
+          <div class="pg-title" id="profileScreenTitle">Candidate Profile & Placement Status</div>
+          <button class="btn btn-sec" onclick="loadStudentProfile(this)">Refresh Profile</button>
+        </div>
+        <div class="content">
+          <!-- STUDENT VIEW WRAPPER -->
+          <div id="studentProfileView">
+            <div id="rosterWarningBanner" style="background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.35); border-radius: var(--r2); padding: 18px 22px; margin-bottom: 20px; display: none;">
+              <div style="font-size: 13px; font-weight: 700; color: var(--amber); margin-bottom: 4px;">⚠️ Registration Pending / Not in Official Roster</div>
+              <div style="font-size: 12px; color: var(--t2); line-height: 1.5;">
+                Your account email (<strong id="warnEmail" style="color:var(--t1);"></strong>) is not currently present in the admin student roster database. Job applications are restricted until an administrator registers your official academic profile record.
+              </div>
+            </div>
+
+            <div style="background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--r2); padding: 24px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+              <div style="display: flex; align-items: center; gap: 20px;">
+                <!-- Clickable Avatar to Change Picture -->
+                <div id="profAvatarLarge" onclick="openAvatarModal()" title="Click to change profile picture" style="width: 75px; height: 75px; border-radius: 50%; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; overflow: hidden; border: 2px solid var(--blue-h); flex-shrink: 0; cursor: pointer; position: relative; transition: filter 0.2s;" onmouseover="this.style.filter='brightness(1.15)'" onmouseout="this.style.filter='none'">U</div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; flex: 1;">
+                  <div>
+                    <div style="font-size: 10px; font-weight: 700; color: var(--t3); text-transform: uppercase;">Full Name</div>
+                    <div id="profName" style="font-size: 16px; font-weight: 700; color: var(--t1); margin-top: 4px;">-</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 10px; font-weight: 700; color: var(--t3); text-transform: uppercase;">Branch / Course</div>
+                    <div id="profBranch" style="font-size: 16px; font-weight: 700; font-family: var(--mono); color: var(--blue-h); margin-top: 4px;">-</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 10px; font-weight: 700; color: var(--t3); text-transform: uppercase;">Academic Percentage</div>
+                    <div id="profPct" style="font-size: 16px; font-weight: 700; font-family: var(--mono); color: var(--green); margin-top: 4px;">-</div>
+                  </div>
+                </div>
+              </div>
+              <button class="btn btn-sec" onclick="openAvatarModal(this)">📷 Change Photo</button>
+            </div>
+
+            <div id="profPlacementBanner" style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: var(--r2); padding: 16px 20px; margin-bottom: 20px; display: none; align-items: center; justify-content: space-between;">
+              <div>
+                <div style="font-size: 10px; font-weight: 700; color: var(--green); text-transform: uppercase;">Placement Offer Status</div>
+                <div id="profPlacementText" style="font-size: 15px; font-weight: 700; color: var(--t1); margin-top: 2px;">Placed successfully!</div>
+              </div>
+              <span class="chip c-green">PLACED</span>
+            </div>
+
+            <div class="tbl-wrap">
+              <div class="tbl-hd"><strong>My Job Applications</strong></div>
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>App ID</th><th>Company Name</th><th>Location</th><th>Package (CTC)</th><th>Application Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="profAppsTbody">
+                    <tr><td colspan="5" style="text-align:center;">Loading your applications...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- PROFESSIONAL ADMIN VIEW WRAPPER -->
+          <div id="adminProfileView" style="display:none;">
+            <div style="background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--r2); padding: 24px; margin-bottom: 20px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+                <div style="display:flex; align-items:center; gap:20px;">
+                  <!-- Clickable Admin Avatar -->
+                  <div id="adminAvatarLarge" onclick="openAvatarModal()" title="Click to change profile picture" style="width:75px; height:75px; border-radius:50%; background:linear-gradient(135deg, var(--violet), var(--blue)); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:24px; color:#fff; box-shadow:0 8px 20px rgba(139,92,246,0.3); overflow:hidden; border: 2px solid var(--violet); cursor: pointer; transition: filter 0.2s;" onmouseover="this.style.filter='brightness(1.15)'" onmouseout="this.style.filter='none'">A</div>
+                  <div>
+                    <div style="font-size:20px; font-weight:700; color:var(--t1);" id="adminProfileName">Administrator</div>
+                    <div style="font-size:12px; color:var(--violet); font-family:var(--mono); margin-top:2px;" id="adminRoleTitle">Lead Placement Officer & System Administrator</div>
+                    <div style="display:flex; gap:6px; margin-top:8px;">
+                      <span class="chip c-violet">Verified Coordinator</span>
+                      <span class="chip c-blue">Full Access Roster</span>
+                    </div>
+                  </div>
+                </div>
+                <button class="btn" onclick="openAdminEditProfileModal()">✏️ Edit Professional Profile</button>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; border-top: 1px solid var(--line); padding-top: 20px;">
+                <div>
+                  <div style="font-size: 11px; font-weight: 700; color: var(--blue-h); text-transform: uppercase; margin-bottom: 6px;">Education & Credentials</div>
+                  <div id="adminEdu" style="font-size: 13px; font-weight: 600; color: var(--t1);">Master of Technology (M.Tech) in Computer Science</div>
+                  <div id="adminEduSub" style="font-size: 11px; color: var(--t3); margin-top: 2px;">National Institute of Technology • Graduated 2022</div>
+                </div>
+                <div>
+                  <div style="font-size: 11px; font-weight: 700; color: var(--green); text-transform: uppercase; margin-bottom: 6px;">Professional Experience</div>
+                  <div id="adminExp" style="font-size: 13px; font-weight: 600; color: var(--t1);">Senior Placement Cell Manager (5+ Years)</div>
+                  <div id="adminExpSub" style="font-size: 11px; color: var(--t3); margin-top: 2px;">Managing Campus Recruitment, Corporate Relations & Applicant Tracking</div>
+                </div>
+                <div>
+                  <div style="font-size: 11px; font-weight: 700; color: var(--amber); text-transform: uppercase; margin-bottom: 6px;">Core Expertise & Skills</div>
+                  <div id="adminSkills" style="font-size: 12px; color: var(--t2); line-height: 1.5;">Enterprise Resource Planning (ERP), Corporate Talent Acquisition, Spring Boot Architecture, Data Analytics, Candidate Pipeline Management.</div>
+                </div>
+                <div>
+                  <div style="font-size: 11px; font-weight: 700; color: var(--violet); text-transform: uppercase; margin-bottom: 6px;">Certifications</div>
+                  <div id="adminCerts" style="font-size: 12px; color: var(--t2); line-height: 1.5;">Certified Scrum Master (CSM), AWS Certified Cloud Practitioner, Advanced Data Analytics & HR Strategy.</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--r2); padding: 20px;">
+              <div style="font-size: 13px; font-weight: 700; margin-bottom: 12px; color: var(--t1);">Administrative Quick Shortcuts</div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn" onclick="spmsNav('students', document.getElementById('tab-students'))">Manage All Students</button>
+                <button class="btn btn-sec" onclick="spmsNav('companies', document.getElementById('tab-companies'))">Manage Companies</button>
+                <button class="btn btn-sec" onclick="spmsNav('applications', document.getElementById('tab-applications'))">Review Applications</button>
+                <button class="btn btn-sec" onclick="spmsNav('placements', document.getElementById('tab-placements'))">View Placement Records</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. STUDENTS SCREEN -->
+  <div id="students" class="scr">
+    <div class="shell">
+      <div class="sb">
+        <div class="sb-top"><div class="logo-box">P</div><strong>PMS Portal</strong></div>
+        <div class="sb-body">
+          <div class="sb-sect">Actions</div>
+          <div class="si on" onclick="fetchStudents()">All Students</div>
+        </div>
+      </div>
+      <div class="main-panel">
+        <div class="topbar">
+          <div class="pg-title">Student Management</div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="btn admin-only" onclick="openCreateStudentModal(this)">+ Add Student</button>
+            <button class="btn btn-sec" onclick="fetchStudents(this)">Refresh</button>
+          </div>
+        </div>
+        <div class="content">
+          <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+            <input class="inp" id="searchStudentInput" placeholder="Search by name..." style="max-width:220px; flex:1;" onkeyup="handleStudentSearch()">
+            <select class="inp" id="filterBranchSelect" style="max-width:140px; flex:1;" onchange="applyStudentFilters()">
+              <option value="">All Branches</option>
+              <option value="CSE">CSE</option>
+              <option value="AIML">AIML</option>
+              <option value="IT">IT</option>
+              <option value="ECE">ECE</option>
+            </select>
+            <input class="inp" type="number" id="filterMinPctInput" placeholder="Min %" style="max-width:100px; flex:1;" onchange="applyStudentFilters()">
+          </div>
+          <div class="tbl-wrap">
+            <div class="tbl-hd"><strong>Student Records</strong></div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th><th>Name</th><th>Email</th><th>Branch</th><th>Percentage</th><th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="studentsTbody">
+                  <tr><td colspan="6" style="text-align:center;">No data loaded. Please sign in!</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. COMPANIES SCREEN -->
+  <div id="companies" class="scr">
+    <div class="shell">
+      <div class="sb">
+        <div class="sb-top"><div class="logo-box">P</div><strong>PMS Portal</strong></div>
+        <div class="sb-body">
+          <div class="sb-sect">Companies</div>
+          <div class="si on" onclick="fetchCompanies()">Company Directory</div>
+        </div>
+      </div>
+      <div class="main-panel">
+        <div class="topbar">
+          <div class="pg-title">Registered Companies</div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="btn admin-only" onclick="openCreateCompanyModal(this)">+ Add Company</button>
+            <button class="btn btn-sec" onclick="fetchCompanies(this)">Refresh</button>
+          </div>
+        </div>
+        <div class="content">
+          <div class="tbl-wrap">
+            <div class="tbl-hd"><strong>Company Listings</strong></div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th><th>Company Name</th><th>Location</th><th>Min %</th><th>Eligible Branches</th><th>Package (CTC)</th><th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="companiesTbody">
+                  <tr><td colspan="7" style="text-align:center;">No data loaded.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. APPLICATIONS SCREEN -->
+  <div id="applications" class="scr">
+    <div class="shell">
+      <div class="sb">
+        <div class="sb-top"><div class="logo-box">P</div><strong>PMS Portal</strong></div>
+        <div class="sb-body">
+          <div class="sb-sect">Applications</div>
+          <div class="si on" onclick="fetchApplications()">All Applications</div>
+        </div>
+      </div>
+      <div class="main-panel">
+        <div class="topbar">
+          <div class="pg-title">Job Applications Pipeline</div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="btn btn-sec" onclick="fetchApplications(this)">Refresh</button>
+          </div>
+        </div>
+        <div class="content">
+          <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; align-items:center;">
+            <span style="font-size:10px; font-weight:700; color:var(--t3); text-transform:uppercase; letter-spacing:.05em;">Filter Status:</span>
+            <span class="chip c-blue" onclick="filterApplicationsByStatus('ALL')">All</span>
+            <span class="chip c-amber" onclick="filterApplicationsByStatus('APPLIED')">Applied</span>
+            <span class="chip c-blue" onclick="filterApplicationsByStatus('SHORTLISTED')">Shortlisted</span>
+            <span class="chip c-violet" onclick="filterApplicationsByStatus('INTERVIEW')">Interview</span>
+            <span class="chip c-green" onclick="filterApplicationsByStatus('SELECTED')">Selected</span>
+            <span class="chip c-rose" onclick="filterApplicationsByStatus('REJECTED')">Rejected</span>
+          </div>
+          <div class="tbl-wrap">
+            <div class="tbl-hd">
+              <strong>Submitted Applications</strong>
+              <span id="appCountIndicator" style="font-size:11px; font-family:var(--mono); color:var(--t3);">Showing all records</span>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>App ID</th><th>Candidate Name</th><th>Target Company</th><th>Date Applied</th><th>Pipeline Status</th><th class="admin-only">Review Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="applicationsTbody">
+                  <tr><td colspan="6" style="text-align:center;">No data loaded.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. PLACEMENTS SCREEN -->
+  <div id="placements" class="scr">
+    <div class="shell">
+      <div class="sb">
+        <div class="sb-top"><div class="logo-box">P</div><strong>PMS Portal</strong></div>
+        <div class="sb-body">
+          <div class="sb-sect">Placements</div>
+          <div class="si on" onclick="fetchPlacements()">All Placements</div>
+        </div>
+      </div>
+      <div class="main-panel">
+        <div class="topbar">
+          <div class="pg-title">Successful Placement Records</div>
+          <button class="btn btn-sec" onclick="fetchPlacements(this)">Refresh</button>
+        </div>
+        <div class="content">
+          <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:14px; margin-bottom:18px;">
+            <div style="background:var(--bg-1); border:1px solid var(--line); border-radius:var(--r2); padding:16px 20px; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-size:10px; font-weight:700; color:var(--t3); text-transform:uppercase; letter-spacing:.05em;">Total Placed Candidates</div>
+                <div id="placementSummaryCount" style="font-size:24px; font-weight:700; font-family:var(--mono); color:var(--green); margin-top:4px;">0</div>
+              </div>
+              <div style="width:36px; height:36px; border-radius:10px; background:rgba(16,185,129,0.15); color:var(--green); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px;">✓</div>
+            </div>
+            <div style="background:var(--bg-1); border:1px solid var(--line); border-radius:var(--r2); padding:16px 20px; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-size:10px; font-weight:700; color:var(--t3); text-transform:uppercase; letter-spacing:.05em;">Average Package Offered</div>
+                <div id="placementSummaryAvgCtc" style="font-size:24px; font-weight:700; font-family:var(--mono); color:var(--blue-h); margin-top:4px;">₹0 LPA</div>
+              </div>
+              <div style="width:36px; height:36px; border-radius:10px; background:rgba(59,130,246,0.15); color:var(--blue-h); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px;">₹</div>
+            </div>
+          </div>
+
+          <div class="tbl-wrap">
+            <div class="tbl-hd"><strong>Confirmed Placements List</strong></div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Record ID</th><th>Student Candidate</th><th>Recruiting Company</th><th>Branch</th><th>Offered Package (CTC)</th><th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="placementsTbody">
+                  <tr><td colspan="6" style="text-align:center;">No placement records found.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'http://localhost:8081';
+    let currentModalAction = null;
+    let studentsCache = [];
+    let applicationsCache = [];
+    let placementsCache = [];
+
+    const branchGradients = [
+      'linear-gradient(180deg, #60A5FA 0%, #2563EB 100%)',
+      'linear-gradient(180deg, #34D399 0%, #059669 100%)',
+      'linear-gradient(180deg, #A78BFA 0%, #7C3AED 100%)',
+      'linear-gradient(180deg, #FBBF24 0%, #D97706 100%)',
+      'linear-gradient(180deg, #22D3EE 0%, #0891B2 100%)',
+      'linear-gradient(180deg, #F43F5E 0%, #E11D48 100%)',
+      'linear-gradient(180deg, #818CF8 0%, #4F46E5 100%)'
+    ];
+
+    function showToast(msg, isErr = false) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.background = isErr ? 'var(--rose)' : 'var(--green)';
+      t.style.opacity = '1';
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.style.opacity = '0', 3500);
+    }
+
+    function setButtonLoading(btnEl, isLoading, loadingText = 'Processing...') {
+      if (!btnEl) return;
+      if (isLoading) {
+        btnEl.dataset.origText = btnEl.textContent;
+        btnEl.classList.remove('is-clicked');
+        btnEl.classList.add('is-processing');
+        btnEl.disabled = true;
+        btnEl.textContent = loadingText;
+      } else {
+        btnEl.disabled = false;
+        btnEl.classList.remove('is-processing');
+        btnEl.textContent = btnEl.dataset.origText || 'Submit';
+        
+        btnEl.classList.add('is-clicked');
+        setTimeout(() => {
+          btnEl.classList.remove('is-clicked');
+        }, 600);
+      }
+    }
+
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('button, .btn');
+      if (btn && !btn.classList.contains('is-processing')) {
+        btn.classList.add('is-clicked');
+        setTimeout(() => {
+          btn.classList.remove('is-clicked');
+        }, 600);
+      }
+    });
+
+    function applyRolePermissions() {
+      const token = localStorage.getItem('accessToken');
+      const rawRole = localStorage.getItem('userRole') || 'STUDENT';
+      const role = rawRole.replace('ROLE_', '');
+      const email = localStorage.getItem('userEmail') || 'User';
+      const savedAvatar = localStorage.getItem('userAvatar');
+      const adminName = localStorage.getItem('adminName') || email.split('@')[0].toUpperCase();
+      
+      const protectedTabs = ['tab-dash', 'tab-profile', 'tab-students', 'tab-companies', 'tab-applications', 'tab-placements'];
+      protectedTabs.forEach(tabId => {
+        const el = document.getElementById(tabId);
+        if (el) el.style.display = token ? 'block' : 'none';
+      });
+
+      document.getElementById('uName').textContent = email;
+      document.getElementById('uNameProf').textContent = email;
+      document.getElementById('adminProfileName').textContent = adminName;
+      
+      const roleBadge = document.getElementById('uRoleBadge');
+      roleBadge.textContent = role;
+      roleBadge.className = `u-role-badge ${role === 'ADMIN' ? 'role-admin' : 'role-student'}`;
+      
+      const roleBadgeProf = document.getElementById('uRoleBadgeProf');
+      roleBadgeProf.textContent = role;
+      roleBadgeProf.className = `u-role-badge ${role === 'ADMIN' ? 'role-admin' : 'role-student'}`;
+
+      const avatarEls = [document.getElementById('uAvatar'), document.getElementById('uAvatarProf'), document.getElementById('adminAvatarLarge'), document.getElementById('profAvatarLarge')];
+      avatarEls.forEach(el => {
+        if (!el) return;
+        if (savedAvatar) {
+          el.innerHTML = `<img src="${savedAvatar}" alt="Avatar">`;
+        } else {
+          el.textContent = adminName.charAt(0).toUpperCase();
+        }
+      });
+
+      if (role === 'ADMIN') {
+        document.getElementById('adminRoleTitle').textContent = localStorage.getItem('adminTitle') || 'Lead Placement Officer & System Administrator';
+        document.getElementById('adminEdu').textContent = localStorage.getItem('adminEdu') || 'Master of Technology (M.Tech) in Computer Science';
+        document.getElementById('adminEduSub').textContent = localStorage.getItem('adminEduSub') || 'National Institute of Technology • Graduated 2022';
+        document.getElementById('adminExp').textContent = localStorage.getItem('adminExp') || 'Senior Placement Cell Manager (5+ Years)';
+        document.getElementById('adminExpSub').textContent = localStorage.getItem('adminExpSub') || 'Managing Campus Recruitment, Corporate Relations & Applicant Tracking';
+        document.getElementById('adminSkills').textContent = localStorage.getItem('adminSkills') || 'Enterprise Resource Planning (ERP), Corporate Talent Acquisition, Spring Boot Architecture, Data Analytics, Candidate Pipeline Management.';
+        document.getElementById('adminCerts').textContent = localStorage.getItem('adminCerts') || 'Certified Scrum Master (CSM), AWS Certified Cloud Practitioner, Advanced Data Analytics & HR Strategy.';
+      }
+
+      const studentView = document.getElementById('studentProfileView');
+      const adminView = document.getElementById('adminProfileView');
+      const screenTitle = document.getElementById('profileScreenTitle');
+
+      if (role === 'ADMIN') {
+        if (studentView) studentView.style.display = 'none';
+        if (adminView) adminView.style.display = 'block';
+        if (screenTitle) screenTitle.textContent = 'Administrator Professional Profile';
+      } else {
+        if (studentView) studentView.style.display = 'block';
+        if (adminView) adminView.style.display = 'none';
+        if (screenTitle) screenTitle.textContent = 'Candidate Profile & Placement Status';
+      }
+
+      document.querySelectorAll('.admin-only').forEach(el => {
+        el.style.display = (role === 'ADMIN' && token) ? '' : 'none';
+      });
+      document.querySelectorAll('.student-only').forEach(el => {
+        el.style.display = (role === 'STUDENT' && token) ? '' : 'none';
+      });
+    }
+
+    function spmsNav(screenId, tabEl) {
+      const token = localStorage.getItem('accessToken');
+
+      if (screenId === 'login' && token) {
+        showToast('You are already logged in!', true);
+        spmsNav('dash', document.getElementById('tab-dash'));
+        return;
+      }
+
+      if (screenId !== 'login' && !token) {
+        showToast('Please sign in or register to access this section.', true);
+        spmsNav('login', document.getElementById('tab-login'));
+        return;
+      }
+
+      document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+      document.querySelectorAll('.ntab').forEach(t => t.classList.remove('on'));
+      
+      const targetScreen = document.getElementById(screenId);
+      if (targetScreen) targetScreen.classList.add('on');
+      if (tabEl) tabEl.classList.add('on');
+
+      applyRolePermissions();
+
+      if (token) {
+        if (screenId === 'dash') loadDashboard();
+        if (screenId === 'profile') loadStudentProfile();
+        if (screenId === 'students') fetchStudents();
+        if (screenId === 'companies') fetchCompanies();
+        if (screenId === 'applications') fetchApplications();
+        if (screenId === 'placements') fetchPlacements();
+      }
+    }
+
+    function toggleAuthMode() {
+      if (localStorage.getItem('accessToken')) {
+        showToast('Active session exists.', true);
+        return;
+      }
+
+      const loginForm = document.getElementById('loginForm');
+      const regForm = document.getElementById('registerForm');
+      const isLogin = loginForm.style.display !== 'none';
+
+      clearAuthInputs();
+
+      if (isLogin) {
+        loginForm.style.display = 'none';
+        regForm.style.display = 'block';
+        document.getElementById('authHeaderTitle').textContent = 'Create PMS Account';
+        document.getElementById('authToggleText').textContent = 'Already have an account?';
+        document.getElementById('authToggleLink').textContent = 'Sign In';
+      } else {
+        regForm.style.display = 'none';
+        loginForm.style.display = 'block';
+        document.getElementById('authHeaderTitle').textContent = 'PMS Portal';
+        document.getElementById('authToggleText').textContent = 'Need an account?';
+        document.getElementById('authToggleLink').textContent = 'Register';
+      }
+    }
+
+    function clearAuthInputs() {
+      const loginForm = document.getElementById('loginForm');
+      const regForm = document.getElementById('registerForm');
+      if (loginForm) loginForm.reset();
+      if (regForm) regForm.reset();
+      
+      const inputs = document.querySelectorAll('#loginForm input, #registerForm input');
+      inputs.forEach(input => { input.value = ''; });
+    }
+
+    async function apiFetch(endpoint, options = {}) {
+      options.headers = options.headers || {};
+      const token = localStorage.getItem('accessToken');
+      if (token) options.headers['Authorization'] = `Bearer ${token}`;
+
+      let res;
+      try {
+        res = await fetch(`${API}${endpoint}`, options);
+      } catch (e) {
+        showToast('Server connection failed (:8081).', true);
+        return null;
+      }
+
+      if (res.status === 403 || res.status === 401) {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (refreshToken) {
+          try {
+            const refreshRes = await fetch(`${API}/auth/refresh`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ refreshToken })
+            });
+
+            if (refreshRes.ok) {
+              const data = await refreshRes.json();
+              localStorage.setItem('accessToken', data.accessToken);
+              options.headers['Authorization'] = `Bearer ${data.accessToken}`;
+              return await fetch(`${API}${endpoint}`, options);
+            }
+          } catch (e) {}
+        }
+        showToast('Session expired. Please log in again.', true);
+        localStorage.clear();
+        clearAuthInputs();
+        spmsNav('login', document.getElementById('tab-login'));
+        return null;
+      }
+
+      if (!res.ok) {
+        let errorMsg = `Request failed (${res.status})`;
+        try {
+          const contentType = res.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const errorBody = await res.json();
+            if (errorBody && errorBody.message) errorMsg = errorBody.message;
+            else if (errorBody && errorBody.errors) errorMsg = Object.values(errorBody.errors).join(', ');
+          } else {
+            const textBody = await res.text();
+            if (textBody) errorMsg = textBody;
+          }
+        } catch (err) {}
+        showToast(errorMsg, true);
+        return null;
+      }
+
+      return res;
+    }
+
+    async function downloadAuthorizedFile(endpoint, filename, btnEl = null) {
+      if (btnEl) setButtonLoading(btnEl, true, 'Downloading...');
+      showToast('Preparing download...');
+      
+      const token = localStorage.getItem('accessToken');
+      try {
+        const res = await fetch(`${API}${endpoint}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : ''
+          }
+        });
+
+        if (res.ok) {
+          const blob = await res.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+          showToast('Download complete!');
+        } else {
+          showToast('Failed to download file.', true);
+        }
+      } catch (e) {
+        showToast('Network error while downloading.', true);
+      }
+      if (btnEl) setButtonLoading(btnEl, false);
+    }
+
+    async function handleLoginSubmit(e) {
+      e.preventDefault();
+      const submitBtn = document.getElementById('loginSubmitBtn');
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+
+      setButtonLoading(submitBtn, true, 'Signing In...');
+
+      try {
+        const stCheckRes = await fetch(`${API}/students`);
+        if (stCheckRes.ok) {
+          const allStudents = await stCheckRes.json();
+          const rosterMatch = allStudents.find(s => s.email.toLowerCase() === email.toLowerCase());
+          
+          if (!rosterMatch && !email.toLowerCase().includes('admin')) {
+            showToast('Access Denied: Your email is not registered in the official student roster.', true);
+            setButtonLoading(submitBtn, false);
+            return;
+          }
+        }
+
+        const res = await fetch(`${API}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem('accessToken', data.accessToken);
+          localStorage.setItem('refreshToken', data.refreshToken);
+          localStorage.setItem('userRole', data.role);
+          localStorage.setItem('userEmail', data.email);
+          
+          if (data.studentId) {
+            localStorage.setItem('studentId', data.studentId);
+          } else {
+            const stRes = await fetch(`${API}/students`, {
+              headers: { 'Authorization': `Bearer ${data.accessToken}` }
+            });
+            if (stRes.ok) {
+              const students = await stRes.json();
+              const match = students.find(s => s.email.toLowerCase() === data.email.toLowerCase());
+              if (match) localStorage.setItem('studentId', match.id);
+            }
+          }
+
+          clearAuthInputs();
+          showToast('Login successful!');
+          spmsNav('dash', document.getElementById('tab-dash'));
+        } else {
+          showToast(data.message || 'Authentication failed', true);
+        }
+      } catch (err) {
+        showToast('Backend connection error (:8081)', true);
+      } finally {
+        setButtonLoading(submitBtn, false);
+      }
+    }
+
+    async function handleRegisterSubmit(e) {
+      e.preventDefault();
+      const submitBtn = document.getElementById('regSubmitBtn');
+      const name = document.getElementById('regName').value;
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value;
+      const role = document.getElementById('regRole').value;
+
+      if (role === 'STUDENT') {
+        const stCheckRes = await fetch(`${API}/students`);
+        if (stCheckRes.ok) {
+          const allStudents = await stCheckRes.json();
+          const rosterMatch = allStudents.find(s => s.email.toLowerCase() === email.toLowerCase());
+          if (!rosterMatch) {
+            showToast('Registration Blocked: You are not present in the official student roster list.', true);
+            setButtonLoading(submitBtn, false);
+            return;
+          }
+        }
+      }
+
+      const payload = { name, email, password, role };
+      setButtonLoading(submitBtn, true, 'Creating Account...');
+
+      try {
+        const res = await fetch(`${API}/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem('accessToken', data.accessToken);
+          localStorage.setItem('refreshToken', data.refreshToken);
+          localStorage.setItem('userRole', data.role);
+          localStorage.setItem('userEmail', data.email);
+          if (data.studentId) localStorage.setItem('studentId', data.studentId);
+
+          clearAuthInputs();
+          showToast('Registration successful!');
+          spmsNav('dash', document.getElementById('tab-dash'));
+        } else {
+          showToast(data.message || 'Registration failed', true);
+        }
+      } catch (err) {
+        showToast('Backend connection error (:8081)', true);
+      } finally {
+        setButtonLoading(submitBtn, false);
+      }
+    }
+
+    async function handleLogout(btnEl = null) {
+      if (btnEl) setButtonLoading(btnEl, true, 'Exiting...');
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (refreshToken) {
+        await apiFetch('/auth/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken })
+        });
+      }
+      
+      localStorage.clear();
+      clearAuthInputs();
+      showToast('Logged out successfully!');
+      spmsNav('login', document.getElementById('tab-login'));
+      if (btnEl) setButtonLoading(btnEl, false);
+    }
+
+    async function loadDashboard(btnEl = null) {
+      if (btnEl) setButtonLoading(btnEl, true, 'Refreshing...');
+      
+      const res = await apiFetch('/reports/summary');
+      let summary = null;
+      if (res && res.ok) {
+        summary = await res.json();
+      }
+
+      const [stRes, coRes, appRes, plRes] = await Promise.all([
+        apiFetch('/students'),
+        apiFetch('/companies'),
+        apiFetch('/applications'),
+        apiFetch('/placements')
+      ]);
+
+      const stList = (stRes && stRes.ok) ? await stRes.json() : [];
+      const coList = (coRes && coRes.ok) ? await coRes.json() : [];
+      const appList = (appRes && appRes.ok) ? await appRes.json() : [];
+      const plList = (plRes && plRes.ok) ? await plRes.json() : [];
+
+      studentsCache = stList;
+      placementsCache = plList;
+
+      document.getElementById('statStudents').textContent = 
+        summary?.totalStudents ?? summary?.studentsCount ?? stList.length;
+
+      document.getElementById('statCompanies').textContent = 
+        summary?.totalCompanies ?? summary?.companiesCount ?? coList.length;
+
+      document.getElementById('statApps').textContent = 
+        summary?.totalApplications ?? summary?.applicationsCount ?? appList.length;
+
+      const placedCount = 
+        summary?.totalPlaced ?? 
+        summary?.totalPlacements ?? 
+        summary?.placedCount ?? 
+        summary?.placements ?? 
+        plList.length;
+
+      document.getElementById('statPlacements').textContent = placedCount;
+
+      let branchData = summary?.placementsByBranch || summary?.branchBreakdown || summary?.branchWisePlacements;
+
+      if (!branchData || Object.keys(branchData).length === 0) {
+        branchData = {};
+        plList.forEach(p => {
+          const branch = p.student?.branch || 'General';
+          branchData[branch] = (branchData[branch] || 0) + 1;
+        });
+      }
+
+      renderBranchChart(branchData);
+      if (btnEl) setButtonLoading(btnEl, false);
+    }
+
+    async function loadStudentProfile(btnEl = null) {
+      if (btnEl) setButtonLoading(btnEl, true, 'Loading...');
+      let studentId = localStorage.getItem('studentId');
+      const userEmail = localStorage.getItem('userEmail');
+
+      const stRes = await apiFetch(`/students`);
+      if (stRes && stRes.ok) {
+        studentsCache = await stRes.json();
+        if (!studentId && userEmail) {
+          const found = studentsCache.find(s => s.email.toLowerCase() === userEmail.toLowerCase());
+          if (found) {
+            studentId = found.id;
+            localStorage.setItem('studentId', studentId);
+          }
+        }
+      }
+
+      const warningBanner = document.getElementById('rosterWarningBanner');
+      const myProfile = studentsCache.find(s => s.id == studentId || (userEmail && s.email.toLowerCase() === userEmail.toLowerCase()));
+
+      if (!myProfile) {
+        warningBanner.style.display = 'block';
+        document.getElementById('warnEmail').textContent = userEmail || 'Unknown';
+        document.getElementById('profName').textContent = userEmail ? userEmail.split('@')[0] : 'Pending Registration';
+        document.getElementById('profBranch').textContent = 'Not Assigned';
+        document.getElementById('profPct').textContent = 'N/A';
+        document.getElementById('profAppsTbody').innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--amber);">Applications restricted until added to the official student roster by Admin.</td></tr>`;
+        if (btnEl) setButtonLoading(btnEl, false);
+        return;
+      }
+
+      warningBanner.style.display = 'none';
+      document.getElementById('profName').textContent = myProfile.name;
+      document.getElementById('profBranch').textContent = myProfile.branch || 'N/A';
+      document.getElementById('profPct').textContent = `${myProfile.percentage}%`;
+
+      const [appRes, plRes] = await Promise.all([
+        apiFetch(`/applications`),
+        apiFetch(`/placements`)
+      ]);
+
+      if (appRes && appRes.ok) {
+        const apps = await appRes.json();
+        const myApps = apps.filter(a => a.student && a.student.id == myProfile.id);
+        
+        const tbody = document.getElementById('profAppsTbody');
+        tbody.innerHTML = '';
+
+        if (myApps.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--t3);">You haven't applied to any companies yet.</td></tr>`;
+        } else {
+          myApps.forEach(a => {
+            const statusClass = a.status === 'SELECTED' ? 'c-green' : a.status === 'REJECTED' ? 'c-rose' : 'c-blue';
+            tbody.innerHTML += `
+              <tr>
+                <td style="font-family:var(--mono); color:var(--blue-h);">${a.id}</td>
+                <td style="font-weight:600; color:var(--t1);">${a.company ? a.company.name : 'N/A'}</td>
+                <td>${a.company ? a.company.location : 'N/A'}</td>
+                <td style="font-family:var(--mono); color:var(--green);">₹${a.company ? a.company.packageOffered : 0} LPA</td>
+                <td><span class="chip ${statusClass}">${a.status}</span></td>
+              </tr>
+            `;
+          });
+        }
+      }
+
+      if (plRes && plRes.ok) {
+        const placements = await plRes.json();
+        const myPlacement = placements.find(p => p.student && p.student.id == myProfile.id);
+        const banner = document.getElementById('profPlacementBanner');
+
+        if (myPlacement) {
+          banner.style.display = 'flex';
+          document.getElementById('profPlacementText').textContent = `Hired at ${myPlacement.company?.name || 'Company'} with ₹${myPlacement.ctc} LPA package!`;
+        } else {
+          banner.style.display = 'none';
+        }
+      }
+
+      if (btnEl) setButtonLoading(btnEl, false);
+    }
+
+    function renderBranchChart(branchData) {
+      const container = document.getElementById('branchChart');
+      container.innerHTML = '';
+
+      let entries = [];
+      if (Array.isArray(branchData)) {
+        entries = branchData.map(item => {
+          if (Array.isArray(item)) return [item[0], item[1]];
+          if (typeof item === 'object' && item !== null) {
+            return [item.branch || item.name || Object.keys(item)[0], item.count || Object.values(item)[0]];
+          }
+          return ["Unknown", 0];
+        });
+      } else if (branchData && typeof branchData === 'object') {
+        entries = Object.entries(branchData);
+      }
+
+      if (!entries || entries.length === 0 || entries.every(([_, count]) => Number(count) === 0)) {
+        container.innerHTML = `
+          <div style="color:var(--t3); font-size:11px; margin:auto; text-align:center;">
+            No placement records found yet.<br>
+            <span style="font-size:10px; color:var(--t4);">Place students or upload offers to view branch analytics.</span>
+          </div>
+        `;
+        return;
+      }
+
+      const maxCount = Math.max(...entries.map(([_, count]) => Number(count) || 0), 1);
+
+      entries.forEach(([branch, count], index) => {
+        const numericCount = Number(count) || 0;
+        const heightPct = Math.max(Math.round((numericCount / maxCount) * 100), 14);
+        const barGradient = branchGradients[index % branchGradients.length];
+
+        container.innerHTML += `
+          <div class="bc-col" title="${branch}: ${numericCount} placements">
+            <div class="bc-val">${numericCount}</div>
+            <div class="bc-bar" style="height:${heightPct}%; background:${barGradient};"></div>
+            <div class="bc-lbl">${branch}</div>
+          </div>
+        `;
+      });
+    }
+
+    async function fetchStudents(btnEl = null) {
+      if (btnEl) setButtonLoading(btnEl, true, 'Refreshing...');
+      const res = await apiFetch('/students');
+      if (res && res.ok) {
+        studentsCache = await res.json();
+        renderStudentsTable(studentsCache);
+      }
+      if (btnEl) setButtonLoading(btnEl, false);
+    }
+
+    async function handleStudentSearch() {
+      const query = document.getElementById('searchStudentInput').value.trim();
+      const endpoint = query ? `/students/search?name=${encodeURIComponent(query)}` : '/students';
+      const res = await apiFetch(endpoint);
+      if (res && res.ok) {
+        studentsCache = await res.json();
+        renderStudentsTable(studentsCache);
+      }
+    }
+
+    async function applyStudentFilters() {
+      const branch = document.getElementById('filterBranchSelect').value;
+      const minPct = document.getElementById('filterMinPctInput').value;
+      
+      const params = new URLSearchParams();
+      if (branch) params.append('branch', branch);
+      if (minPct) params.append('minPercentage', minPct);
+
+      const res = await apiFetch(`/students/filter?${params.toString()}`);
+      if (res && res.ok) {
+        studentsCache = await res.json();
+        renderStudentsTable(studentsCache);
+      }
+    }
+
+    async function renderStudentsTable(list) {
+      const tbody = document.getElementById('studentsTbody');
+      tbody.innerHTML = '';
+      if (!list || list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--t3);">No student records found.</td></tr>`;
+        return;
+      }
+
+      list.forEach(st => {
+        let avatarHtml = `<div style="width:26px;height:26px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;">${st.name ? st.name.charAt(0) : 'U'}</div>`;
+        
+        let resumeActionsHtml = '';
+        if (st.resumePath) {
+          resumeActionsHtml = `
+            <button class="btn btn-sec" style="padding:4px 8px;font-size:10px;" onclick="downloadAuthorizedFile('/resumes/student/${st.id}/download', 'resume-${st.id}.pdf', this)">View</button>
+            <button class="btn btn-sec admin-only" style="padding:4px 8px;font-size:10px;" onclick="openResumeManageModal(${st.id}, 'UPDATE')">Update</button>
+            <button class="btn btn-danger admin-only" style="padding:4px 8px;font-size:10px;" onclick="deleteResume(${st.id})">Delete</button>
+          `;
+        } else {
+          resumeActionsHtml = `
+            <button class="btn" style="padding:4px 8px;font-size:10px;" onclick="openResumeManageModal(${st.id}, 'ADD')">Add Resume</button>
+          `;
+        }
+
+        tbody.innerHTML += `
+          <tr>
+            <td style="font-family:var(--mono); color:var(--blue-h);">${st.id}</td>
+            <td><div style="display:flex;align-items:center;gap:8px;">${avatarHtml}<span style="font-weight:600;color:var(--t1);">${st.name}</span></div></td>
+            <td>${st.email}</td>
+            <td style="font-family:var(--mono);">${st.branch || 'N/A'}</td>
+            <td style="font-family:var(--mono);color:var(--green);">${st.percentage}%</td>
+            <td>
+              <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                ${resumeActionsHtml}
+                <button class="btn btn-danger admin-only" style="padding:4px 8px;font-size:10px;" onclick="deleteStudent(${st.id}, this)">Delete Student</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+      applyRolePermissions();
+    }
+
+    async function deleteStudent(id, btnEl = null) {
+      if (!confirm(`Are you sure you want to delete Student #${id}?`)) return;
+      if (btnEl) setButtonLoading(btnEl, true, 'Deleting...');
+      const res = await apiFetch(`/students/${id}`, { method: 'DELETE' });
+      if (res && res.ok) {
+        showToast(`Student #${id} deleted successfully.`);
+        fetchStudents();
+      }
+      if (btnEl) setButtonLoading(btnEl, false);
+    }
+
+    async function deleteResume(studentId) {
+      if (!confirm(`Are you sure you want to delete the resume for Student #${studentId}?`)) return;
+      const res = await apiFetch(`/resumes/student/${studentId}`, { method: 'DELETE' });
+      if (res && res.ok) {
+        showToast('Resume deleted successfully.');
+        fetchStudents();
+      }
+    }
+
+    function openResumeManageModal(studentId, mode) {
+      const isUpdate = mode === 'UPDATE';
+      const html = `
+        <input type="hidden" id="mResumeStudentId" value="${studentId}">
+        <div class="field-group">
+          <label>${isUpdate ? 'Upload New Resume PDF (Update)' : 'Upload Resume PDF (Add)'}</label>
+          <input class="inp" type="file" id="mResumeFile" accept=".pdf" required>
+        </div>
+      `;
+      openModal(isUpdate ? `Update Resume for Student #${studentId}` : `Add Resume for Student #${studentId}`, html, 'MANAGE_RESUME');
+    }
+
+    async function fetchCompanies(btnEl = null) {
+      if (btnEl) setButtonLoading(btnEl, true, 'Refreshing...');
+      const res = await apiFetch('/companies');
+      if (res && res.ok) renderCompaniesTable(await res.json());
+      if (btnEl) setButtonLoading(btnEl, false);
+    }
+
+    function renderCompaniesTable(list) {
+      const tbody = document.getElementById('companiesTbody');
+      tbody.innerHTML = '';
+      if (!list || list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--t3);">No companies found.</td></tr>`;
+        return;
+      }
+      list.forEach(c => {
+        tbody.innerHTML += `
+          <tr>
+            <td style="font-family:var(--mono); color:var(--blue-h);">${c.id}</td>
+            <td style="font-weight:600; color:var(--t1);">${c.name}</td>
+            <td>${c.location}</td>
+            <td style="font-family:var(--mono);">${c.minPercentage}%</td>
+            <td style="font-family:var(--mono);">${c.eligibleBranches || 'ALL'}</td>
+            <td style="font-family:var(--mono); color:var(--green);">₹${c.packageOffered} LPA</td>
+            <td>
+              <div style="display:flex;gap:4px;">
+                <button class="btn student-only" style="padding:4px 8px; font-size:10px;" onclick="openApplyJobModal(${c.id}, '${c.name.replace(/'/g, "\\'")}', this)">Apply</button>
+                <button class="btn btn-danger admin-only" style="padding:4px 8px; font-size:10px;" onclick="deleteCompany(${c.id}, this)">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+      applyRolePermissions();
+    }
+
+    async function deleteCompany(id, btnEl = null) {
+      if (!confirm(`Are you sure you want to delete Company #${id}?`)) return;
+      if (btnEl) setButtonLoading(btnEl, true, 'Deleting...');
+      const res = await apiFetch(`/companies/${id}`, { method: 'DELETE' });
+      if (res && res.ok) {
+        showToast(`Company #${id} deleted successfully.`);
+        fetchCompanies();
+      }
+      if (btnEl) setButtonLoading(btnEl, false);
+    }
+
+    async function fetchApplications(btnEl = null) {
+      if (btnEl) setButtonLoading(btnEl, true, 'Refreshing...');
+      const res = await apiFetch('/applications');
+      if (res && res.ok) {
+        applicationsCache = await res.json();
+        renderApplicationsTable(applicationsCache);
+      }
+      if (btnEl) setButtonLoading(btnEl, false);
+    }
+
+    function renderApplicationsTable(list) {
+      const tbody = document.getElementById('applicationsTbody');
+      tbody.innerHTML = '';
+      document.getElementById('appCountIndicator').textContent = `Total Records: ${list.length}`;
+
+      if (!list || list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--t3);">No applications found.</td></tr>`;
+        return;
+      }
+
+      list.forEach(a => {
+        const isSelected = a.status === 'SELECTED';
+        const statusClass = isSelected ? 'c-green' : a.status === 'REJECTED' || a.status === 'WITHDRAWN' ? 'c-rose' : a.status === 'INTERVIEW' ? 'c-violet' : 'c-blue';
+        
+        let actionsHtml = '';
+        if (isSelected) {
+          actionsHtml = `<span style="font-size:10px; font-family:var(--mono); color:var(--green); font-weight:700;">✓ Hired / Placed</span>`;
+        } else {
+          actionsHtml = `
+            <div style="display:flex;gap:4px;">
+              <button class="btn btn-sec" style="padding:4px 8px; font-size:10px;" onclick="openStatusUpdateModal(${a.id}, '${a.student ? a.student.id : 0}', '${a.company ? a.company.id : 0}', '${a.company ? a.company.packageOffered : 0}', this)">Update Status</button>
+              <button class="btn" style="padding:4px 8px; font-size:10px;" onclick="openScheduleInterviewModal(${a.id}, this)">Schedule Interview</button>
+            </div>
+          `;
+        }
+
+        tbody.innerHTML += `
+          <tr>
+            <td style="font-family:var(--mono); color:var(--blue-h);">${a.id}</td>
+            <td style="font-weight:600; color:var(--t1);">${a.student ? a.student.name : 'N/A'}</td>
+            <td style="font-weight:600; color:var(--t1);">${a.company ? a.company.name : 'N/A'}</td>
+            <td style="font-family:var(--mono);">${a.appliedDate || 'N/A'}</td>
+            <td><span class="chip ${statusClass}">${a.status}</span></td>
+            <td class="admin-only">${actionsHtml}</td>
+          </tr>
+        `;
+      });
+      applyRolePermissions();
+    }
+
+    function filterApplicationsByStatus(status) {
+      if (status === 'ALL') {
+        renderApplicationsTable(applicationsCache);
+      } else {
+        const filtered = applicationsCache.filter(a => a.status === status);
+        renderApplicationsTable(filtered);
+      }
+    }
+
+    async function fetchPlacements(btnEl = null) {
+      if (btnEl) setButtonLoading(btnEl, true, 'Refreshing...');
+      const res = await apiFetch('/placements');
+      if (res && res.ok) {
+        placementsCache = await res.json();
+        const tbody = document.getElementById('placementsTbody');
+        tbody.innerHTML = '';
+        
+        document.getElementById('placementSummaryCount').textContent = placementsCache.length;
+        let totalCtc = 0;
+
+        if (!placementsCache || placementsCache.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--t3);">No placement records found.</td></tr>`;
+          document.getElementById('placementSummaryAvgCtc').textContent = '₹0 LPA';
+          if (btnEl) setButtonLoading(btnEl, false);
+          return;
+        }
+
+        placementsCache.forEach(p => {
+          const ctcVal = Number(p.ctc) || 0;
+          totalCtc += ctcVal;
+          tbody.innerHTML += `
+            <tr>
+              <td style="font-family:var(--mono); color:var(--blue-h);">${p.id}</td>
+              <td style="font-weight:600; color:var(--t1);">${p.student ? p.student.name : 'N/A'}</td>
+              <td style="font-weight:600; color:var(--t1);">${p.company ? p.company.name : 'N/A'}</td>
+              <td style="font-family:var(--mono);">${p.student ? (p.student.branch || 'N/A') : 'N/A'}</td>
+              <td style="font-family:var(--mono); color:var(--green);">₹${ctcVal} LPA</td>
+              <td><span class="chip c-green">${p.status || 'PLACED'}</span></td>
+            </tr>
+          `;
+        });
+
+        const avgCtc = (totalCtc / placementsCache.length).toFixed(1);
+        document.getElementById('placementSummaryAvgCtc').textContent = `₹${avgCtc} LPA`;
+      }
+      if (btnEl) setButtonLoading(btnEl, false);
+    }
+
+    function openModal(title, fieldsHtml, actionType) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalFields').innerHTML = fieldsHtml;
+      currentModalAction = actionType;
+      document.getElementById('actionModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('actionModal').style.display = 'none';
+      currentModalAction = null;
+    }
+
+    async function openApplyJobModal(companyId, companyName, btnEl = null) {
+      if (btnEl) setButtonLoading(btnEl, true, 'Opening...');
+      const storedStudentId = localStorage.getItem('studentId');
+      
+      const stRes = await apiFetch('/students');
+      if (stRes && stRes.ok) {
+        studentsCache = await stRes.json();
+      }
+
+      let studentOptionsHtml = '';
+      if (studentsCache && studentsCache.length > 0) {
+        studentOptionsHtml = studentsCache.map(st => `
+          <option value="${st.id}" ${storedStudentId && storedStudentId == st.id ? 'selected' : ''}>
+            ID: ${st.id} — ${st.name} (${st.branch || 'General'} - ${st.percentage}%)
+          </option>
+        `).join('');
+      }
+
+      const html = `
+        <input type="hidden" id="mApplyCompId" value="${companyId}">
+        <div style="font-size:11px; color:var(--t2); margin-bottom:12px;">
+          Applying to: <strong style="color:var(--blue-h);">${companyName}</strong>
+        </div>
+        <div class="field-group">
+          <label for="mApplyStudentSelect">Select Candidate Record</label>
+          <select class="inp" id="mApplyStudentSelect" required>
+            ${studentOptionsHtml || '<option value="">No students available</option>'}
+          </select>
+        </div>
+        <div class="field-group">
+          <label for="mApplyResumeFile">Upload Resume (PDF)</label>
+          <input class="inp" type="file" id="mApplyResumeFile" accept=".pdf" required>
+        </div>
+        <div style="font-size:10px; color:var(--amber); margin-bottom:10px;">
+          * Note: Uploading a resume PDF is mandatory to submit your application.
+        </div>
+        <div class="field-group">
+          <label for="mApplyRemarks">Application Remarks (Optional)</label>
+          <input class="inp" id="mApplyRemarks" placeholder="e.g. Applied via Campus Drive" value="Applied via portal">
+        </div>
+      `;
+      openModal(`Submit Application for ${companyName}`, html, 'SUBMIT_APPLICATION');
+      if (btnEl) setButtonLoading(btnEl, false);
+    }
+
+    function openCreateStudentModal(btnEl = null) {
+      if (btnEl) btnEl.classList.add('is-clicked');
+      const html = `
+        <div class="field-group"><label>Full Name</label><input class="inp" id="mStudentName" required></div>
+        <div class="field-group"><label>Email Address</label><input class="inp" type="email" id="mStudentEmail" required></div>
+        <div class="field-group"><label>Login Password</label><input class="inp" type="password" id="mStudentPassword" placeholder="Set login password" required></div>
+        <div class="field-group"><label>Branch</label><input class="inp" id="mStudentBranch" placeholder="CSE, AIML, IT" required></div>
+        <div class="field-group"><label>Percentage / CGPA</label><input class="inp" type="number" step="0.1" id="mStudentPct" required></div>
+      `;
+      openModal('Register New Student', html, 'CREATE_STUDENT');
+    }
+
+    function openCreateCompanyModal(btnEl = null) {
+      if (btnEl) btnEl.classList.add('is-clicked');
+      const html = `
+        <div class="field-group"><label>Company Name</label><input class="inp" id="mCompName" required></div>
+        <div class="field-group"><label>Location</label><input class="inp" id="mCompLoc" required></div>
+        <div class="field-group"><label>Package Offered (LPA)</label><input class="inp" type="number" step="0.1" id="mCompPkg" required></div>
+        <div class="field-group"><label>Min Percentage</label><input class="inp" type="number" step="0.1" id="mCompMinPct" value="0.0"></div>
+        <div class="field-group"><label>Eligible Branches</label><input class="inp" id="mCompBranches" value="ALL" placeholder="ALL or CSE,IT"></div>
+      `;
+      openModal('Add New Company', html, 'CREATE_COMPANY');
+    }
+
+    function openStatusUpdateModal(appId, studentId, companyId, ctc, btnEl = null) {
+      if (btnEl) btnEl.classList.add('is-clicked');
+      const html = `
+        <input type="hidden" id="mAppId" value="${appId}">
+        <input type="hidden" id="mAppStudentId" value="${studentId}">
+        <input type="hidden" id="mAppCompanyId" value="${companyId}">
+        <input type="hidden" id="mAppCtc" value="${ctc}">
+        <div class="field-group"><label>New Status</label>
+          <select class="inp" id="mAppStatus" onchange="togglePlacementCtcInput(this.value)">
+            <option value="SHORTLISTED">SHORTLISTED</option>
+            <option value="INTERVIEW">INTERVIEW</option>
+            <option value="SELECTED">SELECTED</option>
+            <option value="REJECTED">REJECTED</option>
+          </select>
+        </div>
+        <div class="field-group" id="ctcContainer" style="display:none;">
+          <label>Placement CTC (LPA)</label>
+          <input class="inp" type="number" step="0.1" id="mPlacementCtc" value="${ctc}">
+        </div>
+        <div class="field-group"><label>Remarks</label><input class="inp" id="mAppRemarks"></div>
+      `;
+      openModal(`Update Application #${appId}`, html, 'UPDATE_APP_STATUS');
+    }
+
+    function togglePlacementCtcInput(statusVal) {
+      const container = document.getElementById('ctcContainer');
+      if (container) {
+        container.style.display = statusVal === 'SELECTED' ? 'block' : 'none';
+      }
+    }
+
+    function openScheduleInterviewModal(appId, btnEl = null) {
+      if (btnEl) btnEl.classList.add('is-clicked');
+      const html = `
+        <input type="hidden" id="mIntAppId" value="${appId}">
+        <div class="field-group"><label>Round Number</label><input class="inp" type="number" id="mIntRoundNum" value="1"></div>
+        <div class="field-group"><label>Round Type</label><input class="inp" id="mIntRoundType" value="Technical Round 1"></div>
+        <div class="field-group"><label>Date</label><input class="inp" type="date" id="mIntDate" required></div>
+        <div class="field-group"><label>Time</label><input class="inp" type="time" id="mIntTime" required></div>
+        <div class="field-group"><label>Venue</label><input class="inp" id="mIntVenue" value="Virtual / Online"></div>
+      `;
+      openModal(`Schedule Interview for App #${appId}`, html, 'SCHEDULE_INTERVIEW');
+    }
+
+    function openAvatarModal(btnEl = null) {
+      if (btnEl) btnEl.classList.add('is-clicked');
+      const html = `
+        <div class="field-group">
+          <label>Option A: Upload Image File</label>
+          <input class="inp" type="file" id="mAvatarFile" accept="image/*">
+        </div>
+        <div class="field-group" style="margin-top: 10px;">
+          <label>Option B: Paste Image URL (LinkedIn / GitHub / Web Link)</label>
+          <input class="inp" type="url" id="mAvatarUrl" placeholder="https://example.com/my-photo.jpg">
+        </div>
+      `;
+      openModal('Set Professional Profile Picture', html, 'UPDATE_AVATAR');
+    }
+
+    function openAdminEditProfileModal() {
+      const curName = localStorage.getItem('adminName') || 'Administrator';
+      const curTitle = localStorage.getItem('adminTitle') || 'Lead Placement Officer & System Administrator';
+      const curEdu = localStorage.getItem('adminEdu') || 'Master of Technology (M.Tech) in Computer Science';
+      const curEduSub = localStorage.getItem('adminEduSub') || 'National Institute of Technology • Graduated 2022';
+      const curExp = localStorage.getItem('adminExp') || 'Senior Placement Cell Manager (5+ Years)';
+      const curExpSub = localStorage.getItem('adminExpSub') || 'Managing Campus Recruitment, Corporate Relations & Applicant Tracking';
+      const curSkills = localStorage.getItem('adminSkills') || 'Enterprise Resource Planning (ERP), Corporate Talent Acquisition, Spring Boot Architecture, Data Analytics, Candidate Pipeline Management.';
+      const curCerts = localStorage.getItem('adminCerts') || 'Certified Scrum Master (CSM), AWS Certified Cloud Practitioner, Advanced Data Analytics & HR Strategy.';
+
+      const html = `
+        <div class="field-group"><label>Admin Full Name</label><input class="inp" id="editAdminName" value="${curName}" required></div>
+        <div class="field-group"><label>Professional Designation / Title</label><input class="inp" id="editAdminTitle" value="${curTitle}" required></div>
+        <div class="field-group"><label>Education Degree</label><input class="inp" id="editAdminEdu" value="${curEdu}" required></div>
+        <div class="field-group"><label>Education Institution & Year</label><input class="inp" id="editAdminEduSub" value="${curEduSub}" required></div>
+        <div class="field-group"><label>Experience Role & Tenure</label><input class="inp" id="editAdminExp" value="${curExp}" required></div>
+        <div class="field-group"><label>Experience Description</label><input class="inp" id="editAdminExpSub" value="${curExpSub}" required></div>
+        <div class="field-group"><label>Core Expertise & Skills</label><textarea class="inp" id="editAdminSkills" rows="2">${curSkills}</textarea></div>
+        <div class="field-group"><label>Certifications</label><textarea class="inp" id="editAdminCerts" rows="2">${curCerts}</textarea></div>
+        <div style="margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px;">
+          <button type="button" class="btn btn-sec" style="width: 100%;" onclick="openAvatarModal()">📷 Change Profile Picture</button>
+        </div>
+      `;
+      openModal('Edit Professional Profile Details', html, 'SAVE_ADMIN_PROFILE');
+    }
+
+    function openForgotPasswordModal() {
+      const html = `
+        <div class="field-group">
+          <label>Registered Email Address</label>
+          <input class="inp" type="email" id="fpEmail" placeholder="Enter your email to receive OTP" required>
+        </div>
+        <div id="fpOtpSection" style="display:none; margin-top: 10px;">
+          <div class="field-group">
+            <label>Verification OTP Code</label>
+            <input class="inp" type="text" id="fpOtpCode" placeholder="Enter 6-digit code (e.g. 123456)">
+          </div>
+          <div class="field-group">
+            <label>New Password</label>
+            <input class="inp" type="password" id="fpNewPassword" placeholder="Enter new password">
+          </div>
+        </div>
+      `;
+      openModal('Reset Forgotten Password', html, 'FORGOT_PASSWORD_REQUEST');
+    }
+
+    function openChangePasswordModal(btnEl = null) {
+      if (btnEl) btnEl.classList.add('is-clicked');
+      const userEmail = localStorage.getItem('userEmail') || '';
+      
+      const html = `
+        <div class="field-group">
+          <label>Email Address</label>
+          <input class="inp" type="email" id="pwEmail" value="${userEmail}" placeholder="Enter your registered email" required>
+        </div>
+        <div class="field-group">
+          <label>Current Old Password</label>
+          <input class="inp" type="password" id="mOldPw" placeholder="Enter current password" required>
+        </div>
+        <div class="field-group">
+          <label>New Password</label>
+          <input class="inp" type="password" id="mNewPw" placeholder="Enter new secure password" required>
+        </div>
+      `;
+      openModal('Security: Change Password', html, 'CHANGE_PW');
+    }
+
+    async function handleModalSubmit(e) {
+      e.preventDefault();
+      const submitBtn = document.getElementById('modalSubmitBtn');
+      setButtonLoading(submitBtn, true);
+
+      try {
+        if (currentModalAction === 'FORGOT_PASSWORD_REQUEST') {
+          const email = document.getElementById('fpEmail').value.trim();
+          const otpSection = document.getElementById('fpOtpSection');
+          
+          if (otpSection.style.display === 'none') {
+            // Step 1: Request OTP
+            const res = await fetch(`${API}/auth/forgot-password`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email })
+            });
+            if (res.ok) {
+              showToast('OTP sent successfully! Use 123456.');
+              otpSection.style.display = 'block';
+              submitBtn.textContent = 'Verify & Reset Password';
+            } else {
+              showToast('Email not found in system.', true);
+            }
+          } else {
+            // Step 2: Confirm OTP and Reset Password
+            const otp = document.getElementById('fpOtpCode').value.trim();
+            const newPassword = document.getElementById('fpNewPassword').value;
+            const email = document.getElementById('fpEmail').value.trim();
+
+            const res = await fetch(`${API}/auth/reset-password`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, otp, newPassword })
+            });
+            if (res.ok) {
+              showToast('Password reset successfully! Please log in.');
+              closeModal();
+            } else {
+              showToast('Invalid OTP or reset failed.', true);
+            }
+          }
+          setButtonLoading(submitBtn, false);
+          return;
+        }
+
+        if (currentModalAction === 'SAVE_ADMIN_PROFILE') {
+          localStorage.setItem('adminName', document.getElementById('editAdminName').value);
+          localStorage.setItem('adminTitle', document.getElementById('editAdminTitle').value);
+          localStorage.setItem('adminEdu', document.getElementById('editAdminEdu').value);
+          localStorage.setItem('adminEduSub', document.getElementById('editAdminEduSub').value);
+          localStorage.setItem('adminExp', document.getElementById('editAdminExp').value);
+          localStorage.setItem('adminExpSub', document.getElementById('editAdminExpSub').value);
+          localStorage.setItem('adminSkills', document.getElementById('editAdminSkills').value);
+          localStorage.setItem('adminCerts', document.getElementById('editAdminCerts').value);
+
+          showToast('Professional profile updated successfully!');
+          closeModal();
+          applyRolePermissions();
+          setButtonLoading(submitBtn, false);
+          return;
+        }
+
+        if (currentModalAction === 'UPDATE_AVATAR') {
+          const fileInput = document.getElementById('mAvatarFile');
+          const urlInput = document.getElementById('mAvatarUrl').value.trim();
+
+          if (urlInput) {
+            localStorage.setItem('userAvatar', urlInput);
+            showToast('Profile picture URL updated successfully!');
+            closeModal();
+            applyRolePermissions();
+            setButtonLoading(submitBtn, false);
+            return;
+          }
+
+          if (fileInput.files && fileInput.files.length > 0) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+              localStorage.setItem('userAvatar', event.target.result);
+              showToast('Profile image uploaded successfully!');
+              closeModal();
+              applyRolePermissions();
+              setButtonLoading(submitBtn, false);
+            };
+            reader.readAsDataURL(fileInput.files[0]);
+            return;
+          }
+
+          showToast('Please upload a file or paste a valid image URL.', true);
+          setButtonLoading(submitBtn, false);
+          return;
+        }
+
+        if (currentModalAction === 'SUBMIT_APPLICATION') {
+          const compId = document.getElementById('mApplyCompId').value;
+          const studentId = document.getElementById('mApplyStudentSelect').value;
+          const remarks = document.getElementById('mApplyRemarks').value;
+          const resumeFileInput = document.getElementById('mApplyResumeFile');
+
+          if (!studentId) {
+            showToast('Please select a student record.', true);
+            setButtonLoading(submitBtn, false);
+            return;
+          }
+
+          if (!resumeFileInput || !resumeFileInput.files || resumeFileInput.files.length === 0) {
+            showToast('Resume upload is mandatory. Please attach your resume PDF.', true);
+            setButtonLoading(submitBtn, false);
+            return;
+          }
+
+          const formData = new FormData();
+          formData.append('file', resumeFileInput.files[0]);
+
+          const uploadRes = await apiFetch(`/resumes/student/${studentId}`, {
+            method: 'POST',
+            body: formData
+          });
+
+          if (!uploadRes || !uploadRes.ok) {
+            setButtonLoading(submitBtn, false);
+            return;
+          }
+
+          const payload = {
+            status: 'APPLIED',
+            appliedDate: new Date().toISOString().split('T')[0],
+            remarks: remarks || 'Submitted via portal'
+          };
+
+          const res = await apiFetch(`/applications/student/${studentId}/company/${compId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (res && res.ok) {
+            showToast('Resume uploaded & application submitted successfully!');
+            closeModal();
+            fetchApplications();
+          }
+        }
+
+        else if (currentModalAction === 'MANAGE_RESUME') {
+          const studentId = document.getElementById('mResumeStudentId').value;
+          const fileInput = document.getElementById('mResumeFile');
+
+          if (!fileInput.files.length) {
+            showToast('Please select a PDF resume file.', true);
+            setButtonLoading(submitBtn, false);
+            return;
+          }
+
+          const formData = new FormData();
+          formData.append('file', fileInput.files[0]);
+
+          const res = await apiFetch(`/resumes/student/${studentId}`, {
+            method: 'POST',
+            body: formData
+          });
+
+          if (res && res.ok) {
+            showToast('Resume saved successfully!');
+            closeModal();
+            fetchStudents();
+          }
+        }
+
+        else if (currentModalAction === 'CREATE_STUDENT') {
+          const name = document.getElementById('mStudentName').value;
+          const email = document.getElementById('mStudentEmail').value;
+          const password = document.getElementById('mStudentPassword').value;
+          const branch = document.getElementById('mStudentBranch').value;
+          const percentage = parseFloat(document.getElementById('mStudentPct').value);
+
+          const authPayload = { name, email, password, role: 'STUDENT' };
+          await fetch(`${API}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(authPayload)
+          });
+
+          const studentPayload = { name, email, branch, percentage };
+          const res = await apiFetch('/students', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(studentPayload) 
+          });
+
+          if (res && res.ok) { 
+            showToast('Student account & record created successfully!'); 
+            closeModal(); 
+            fetchStudents(); 
+          }
+        }
+
+        else if (currentModalAction === 'CREATE_COMPANY') {
+          const payload = {
+            name: document.getElementById('mCompName').value,
+            location: document.getElementById('mCompLoc').value,
+            packageOffered: parseFloat(document.getElementById('mCompPkg').value),
+            minPercentage: parseFloat(document.getElementById('mCompMinPct').value || 0),
+            eligibleBranches: document.getElementById('mCompBranches').value || 'ALL'
+          };
+          const res = await apiFetch('/companies', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+          if (res && res.ok) { showToast('Company added successfully!'); closeModal(); fetchCompanies(); }
+        }
+
+        else if (currentModalAction === 'UPDATE_APP_STATUS') {
+          const appId = document.getElementById('mAppId').value;
+          const newStatus = document.getElementById('mAppStatus').value;
+          const remarks = document.getElementById('mAppRemarks').value;
+          const studentId = document.getElementById('mAppStudentId').value;
+          const companyId = document.getElementById('mAppCompanyId').value;
+          const defaultCtc = document.getElementById('mAppCtc').value;
+
+          const payload = {
+            status: newStatus,
+            remarks: remarks
+          };
+          setButtonLoading(submitBtn, true, 'Updating...');
+          
+          const res = await apiFetch(`/applications/${appId}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+          
+          if (res && res.ok) {
+            if (newStatus === 'SELECTED' && studentId && companyId) {
+              const ctcInput = document.getElementById('mPlacementCtc');
+              const ctcVal = ctcInput ? parseFloat(ctcInput.value) || parseFloat(defaultCtc) || 0 : parseFloat(defaultCtc) || 0;
+              
+              const placementPayload = {
+                placementDate: new Date().toISOString().split('T')[0],
+                ctc: ctcVal,
+                status: 'PLACED'
+              };
+
+              await apiFetch(`/placements/student/${studentId}/company/${companyId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(placementPayload)
+              });
+            }
+
+            showToast('Application updated & placement synchronized!');
+            closeModal();
+            
+            await fetchApplications();
+            await fetchPlacements();
+            loadDashboard();
+          }
+        }
+
+        else if (currentModalAction === 'SCHEDULE_INTERVIEW') {
+          const appId = document.getElementById('mIntAppId').value;
+          const timeVal = document.getElementById('mIntTime').value;
+          const payload = {
+            roundNumber: parseInt(document.getElementById('mIntRoundNum').value),
+            roundType: document.getElementById('mIntRoundType').value,
+            interviewDate: document.getElementById('mIntDate').value,
+            interviewTime: timeVal.length === 5 ? `${timeVal}:00` : timeVal,
+            venue: document.getElementById('mIntVenue').value,
+            status: 'SCHEDULED'
+          };
+          const res = await apiFetch(`/interviews/application/${appId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+          if (res && res.ok) { showToast('Interview scheduled!'); closeModal(); }
+        }
+
+        else if (currentModalAction === 'CHANGE_PW') {
+          const currentPassword = document.getElementById('mOldPw').value;
+          const newPassword = document.getElementById('mNewPw').value;
+
+          const payload = { currentPassword, newPassword };
+          const res = await apiFetch('/auth/change-password', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(payload) 
+          });
+
+          if (res && res.ok) { 
+            showToast('Password changed successfully!'); 
+            closeModal(); 
+          }
+        }
+      } catch (err) {
+        showToast('Action execution failed', true);
+      } finally {
+        setButtonLoading(submitBtn, false);
+      }
+    }
+
+    document.getElementById('actionModal').addEventListener('click', (e) => {
+      if (e.target.id === 'actionModal') closeModal();
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      localStorage.clear();
+      clearAuthInputs();
+      spmsNav('login', document.getElementById('tab-login'));
+    });
+  </script>
+</body>
+</html>
