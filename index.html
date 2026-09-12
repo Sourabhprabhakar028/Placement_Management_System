@@ -842,7 +842,6 @@
   </div>
 
   <script>
-    // FIXED: Pointing to live Render Backend URL instead of localhost
     const API = 'https://placement-management-system-backend-3fk2.onrender.com';
     let currentModalAction = null;
     let studentsCache = [];
@@ -1137,18 +1136,6 @@
       setButtonLoading(submitBtn, true, 'Signing In...');
 
       try {
-        const stCheckRes = await fetch(`${API}/students`);
-        if (stCheckRes.ok) {
-          const allStudents = await stCheckRes.json();
-          const rosterMatch = allStudents.find(s => s.email.toLowerCase() === email.toLowerCase());
-          
-          if (!rosterMatch && !email.toLowerCase().includes('admin')) {
-            showToast('Access Denied: Your email is not registered in the official student roster.', true);
-            setButtonLoading(submitBtn, false);
-            return;
-          }
-        }
-
         const res = await fetch(`${API}/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1162,17 +1149,13 @@
           localStorage.setItem('userRole', data.role);
           localStorage.setItem('userEmail', data.email);
           
-          if (data.studentId) {
-            localStorage.setItem('studentId', data.studentId);
-          } else {
-            const stRes = await fetch(`${API}/students`, {
-              headers: { 'Authorization': `Bearer ${data.accessToken}` }
-            });
-            if (stRes.ok) {
-              const students = await stRes.json();
-              const match = students.find(s => s.email.toLowerCase() === data.email.toLowerCase());
-              if (match) localStorage.setItem('studentId', match.id);
-            }
+          const stRes = await fetch(`${API}/students`, {
+            headers: { 'Authorization': `Bearer ${data.accessToken}` }
+          });
+          if (stRes.ok) {
+            const students = await stRes.json();
+            const match = students.find(s => s.email.toLowerCase() === data.email.toLowerCase());
+            if (match) localStorage.setItem('studentId', match.id);
           }
 
           clearAuthInputs();
@@ -1196,19 +1179,6 @@
       const password = document.getElementById('regPassword').value;
       const role = document.getElementById('regRole').value;
 
-      if (role === 'STUDENT') {
-        const stCheckRes = await fetch(`${API}/students`);
-        if (stCheckRes.ok) {
-          const allStudents = await stCheckRes.json();
-          const rosterMatch = allStudents.find(s => s.email.toLowerCase() === email.toLowerCase());
-          if (!rosterMatch) {
-            showToast('Registration Blocked: You are not present in the official student roster list.', true);
-            setButtonLoading(submitBtn, false);
-            return;
-          }
-        }
-      }
-
       const payload = { name, email, password, role };
       setButtonLoading(submitBtn, true, 'Creating Account...');
 
@@ -1231,7 +1201,7 @@
           showToast('Registration successful!');
           spmsNav('dash', document.getElementById('tab-dash'));
         } else {
-          showToast(data.message || 'Registration failed', true);
+          showToast(data.message || 'Registration failed (Email may already exist)', true);
         }
       } catch (err) {
         showToast('Backend connection error', true);
