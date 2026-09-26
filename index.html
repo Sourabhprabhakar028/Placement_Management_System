@@ -327,12 +327,12 @@
   <!-- TOP NAVIGATION TABS -->
   <div class="nav-bar">
     <button class="ntab on" id="tab-login" onclick="spmsNav('login', this)">Auth</button>
-    <button class="ntab" id="tab-dash" style="display:none;" onclick="spmsNav('dash', this)">Dashboard</button>
-    <button class="ntab" id="tab-profile" style="display:none;" onclick="spmsNav('profile', this)">My Profile</button>
-    <button class="ntab" id="tab-students" style="display:none;" onclick="spmsNav('students', this)">Students</button>
-    <button class="ntab" id="tab-companies" style="display:none;" onclick="spmsNav('companies', this)">Companies</button>
-    <button class="ntab" id="tab-applications" style="display:none;" onclick="spmsNav('applications', this)">Applications</button>
-    <button class="ntab" id="tab-placements" style="display:none;" onclick="spmsNav('placements', this)">Placements</button>
+    <button class="ntab" id="tab-dash" onclick="spmsNav('dash', this)">Dashboard</button>
+    <button class="ntab" id="tab-profile" onclick="spmsNav('profile', this)">My Profile</button>
+    <button class="ntab" id="tab-students" onclick="spmsNav('students', this)">Students</button>
+    <button class="ntab" id="tab-companies" onclick="spmsNav('companies', this)">Companies</button>
+    <button class="ntab" id="tab-applications" onclick="spmsNav('applications', this)">Applications</button>
+    <button class="ntab" id="tab-placements" onclick="spmsNav('placements', this)">Placements</button>
   </div>
 
   <div id="toast">Notification</div>
@@ -905,12 +905,6 @@
       const savedAvatar = localStorage.getItem('userAvatar');
       const adminName = localStorage.getItem('adminName') || email.split('@')[0].toUpperCase();
       
-      const protectedTabs = ['tab-dash', 'tab-profile', 'tab-students', 'tab-companies', 'tab-applications', 'tab-placements'];
-      protectedTabs.forEach(tabId => {
-        const el = document.getElementById(tabId);
-        if (el) el.style.display = token ? 'block' : 'none';
-      });
-
       document.getElementById('uName').textContent = email;
       document.getElementById('uNameProf').textContent = email;
       document.getElementById('adminProfileName').textContent = adminName;
@@ -966,20 +960,6 @@
     }
 
     function spmsNav(screenId, tabEl) {
-      const token = localStorage.getItem('accessToken');
-
-      if (screenId === 'login' && token) {
-        showToast('You are already logged in!', true);
-        spmsNav('dash', document.getElementById('tab-dash'));
-        return;
-      }
-
-      if (screenId !== 'login' && !token) {
-        showToast('Please sign in or register to access this section.', true);
-        spmsNav('login', document.getElementById('tab-login'));
-        return;
-      }
-
       document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
       document.querySelectorAll('.ntab').forEach(t => t.classList.remove('on'));
       
@@ -989,13 +969,21 @@
 
       applyRolePermissions();
 
-      if (token) {
+      const token = localStorage.getItem('accessToken');
+      if (token && screenId !== 'login') {
         if (screenId === 'dash') loadDashboard();
         if (screenId === 'profile') loadStudentProfile();
         if (screenId === 'students') fetchStudents();
         if (screenId === 'companies') fetchCompanies();
         if (screenId === 'applications') fetchApplications();
         if (screenId === 'placements') fetchPlacements();
+      } else if (screenId !== 'login') {
+        // If not logged in, fetch dummy data or let tables handle empty states safely
+        if (screenId === 'students') fetchStudents();
+        if (screenId === 'companies') fetchCompanies();
+        if (screenId === 'applications') fetchApplications();
+        if (screenId === 'placements') fetchPlacements();
+        if (screenId === 'dash') loadDashboard();
       }
     }
 
@@ -1067,11 +1055,7 @@
             }
           } catch (e) {}
         }
-        showToast('Session expired. Please log in again.', true);
-        localStorage.clear();
-        clearAuthInputs();
-        spmsNav('login', document.getElementById('tab-login'));
-        return null;
+        return res;
       }
 
       if (!res.ok) {
@@ -1088,7 +1072,7 @@
           }
         } catch (err) {}
         showToast(errorMsg, true);
-        return null;
+        return res;
       }
 
       return res;
@@ -1305,17 +1289,19 @@
       const myProfile = studentsCache.find(s => s.id == studentId || (userEmail && s.email.toLowerCase() === userEmail.toLowerCase()));
 
       if (!myProfile) {
-        warningBanner.style.display = 'block';
-        document.getElementById('warnEmail').textContent = userEmail || 'Unknown';
-        document.getElementById('profName').textContent = userEmail ? userEmail.split('@')[0] : 'Pending Registration';
-        document.getElementById('profBranch').textContent = 'Not Assigned';
+        if (warningBanner) {
+          warningBanner.style.display = 'block';
+          document.getElementById('warnEmail').textContent = userEmail || 'Unknown';
+        }
+        document.getElementById('profName').textContent = userEmail ? userEmail.split('@')[0] : 'Guest User';
+        document.getElementById('profBranch').textContent = 'General';
         document.getElementById('profPct').textContent = 'N/A';
-        document.getElementById('profAppsTbody').innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--amber);">Applications restricted until added to the official student roster by Admin.</td></tr>`;
+        document.getElementById('profAppsTbody').innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--t3);">Viewing profile in guest mode.</td></tr>`;
         if (btnEl) setButtonLoading(btnEl, false);
         return;
       }
 
-      warningBanner.style.display = 'none';
+      if (warningBanner) warningBanner.style.display = 'none';
       document.getElementById('profName').textContent = myProfile.name;
       document.getElementById('profBranch').textContent = myProfile.branch || 'N/A';
       document.getElementById('profPct').textContent = `${myProfile.percentage}%`;
@@ -2164,9 +2150,8 @@
     });
 
     window.addEventListener('DOMContentLoaded', () => {
-      localStorage.clear();
-      clearAuthInputs();
-      spmsNav('login', document.getElementById('tab-login'));
+      // Start by loading the dashboard directly in guest/open mode without requiring login
+      spmsNav('dash', document.getElementById('tab-dash'));
     });
   </script>
 </body>
